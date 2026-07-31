@@ -409,11 +409,8 @@ int main(int argc, char **argv)
     if (!g_config.loaded_configuration_file)
         Configuration_Save();
 
-    // Setup display (fullscreen/GUI)
-    if ((g_machine_flags & MACHINE_RUN) == MACHINE_RUN && !g_config.start_in_gui)
-        g_env.state = MEKA_STATE_GAME;
-    else
-        g_env.state = MEKA_STATE_GUI;
+    // Setup display (GUI-mode)
+    g_env.state = MEKA_STATE_GUI;
     Video_Setup_State();
 
     Machine_Reset          (); // Reset Emulated Machine (set default values)
@@ -422,7 +419,15 @@ int main(int argc, char **argv)
 
     // Load ROM from command line if necessary
     Load_ROM_Command_Line();
-
+    
+    // Re-evaluate startup display state after loading ROM from command-line.
+    // This allows start_in_gui = 0 to take effect if a ROM was loaded at startup.
+    if (!g_config.start_in_gui && (g_machine_flags & MACHINE_RUN) == MACHINE_RUN)
+    {
+        g_env.state = MEKA_STATE_GAME;
+        Video_Setup_State();
+    }
+    
     // Wait for Win32 console signal
     if (!ConsoleWaitForAnswer(true))
         return (0);
